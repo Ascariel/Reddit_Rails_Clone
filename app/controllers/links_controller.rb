@@ -1,5 +1,7 @@
 class LinksController < ApplicationController
   before_action :set_link, only: [:show, :edit, :update, :destroy]
+  before_action :authenticate_user!, :except => [:index, :show]
+  before_action :authorized_user, only: [:edit, :update, :destroy]
 
   # GET /links
   # GET /links.json
@@ -24,7 +26,7 @@ class LinksController < ApplicationController
   # POST /links
   # POST /links.json
   def create
-    @link = Link.new(link_params)
+    @link = current_user.links.new(link_params)
 
     respond_to do |format|
       if @link.save
@@ -65,6 +67,11 @@ class LinksController < ApplicationController
     # Use callbacks to share common setup or constraints between actions.
     def set_link
       @link = Link.find(params[:id])
+    end
+
+    def authorized_user
+      @user_link = current_user.links.where(id: params[:id])
+      redirect_to links_path notice: "Not authorized to edit this link" if @user_link.empty?
     end
 
     # Never trust parameters from the scary internet, only allow the white list through.
